@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(jupyter --version)",
+      "Bash(jupyter lab *)",
+      "Bash(jupyter server *)",
+      "Bash(jupyter notebook *)",
+      "Bash(grep -vE \"^\\\\s*#|^\\\\s*$\")",
+      "Bash(python3 *)",
+      "Bash(kill 4581)",
+      "Bash(kill -0 4581)",
+      "Bash(kill -9 4581)",
+      "Bash(nohup jupyter lab --ip 0.0.0.0 --port 8888 --no-browser)",
+      "Bash(claude --version)",
+      "Bash(ssh -V)",
+      "Bash(rm /tmp/make_math_pdf.py)",
+      "Bash(python3 -c \"from PyPDF2 import PdfReader; print\\('pages:', len\\(PdfReader\\('Src/PaperFigures/spline_pseudotime_de_math.pdf'\\).pages\\)\\)\")"
+    ]
+  }
+}

@@ -1,0 +1,72 @@
+# ============================================================
+# CODE AND CONFIGURATION ONLY -- no data files, ever.
+# Strategy: ignore everything, then re-include known source types.
+# Anything not listed below is excluded by default.
+# ============================================================
+
+# 1) Ignore everything...
+*
+# 2) ...but still descend into subdirectories
+!*/
+
+# ---- Code ----
+!*.py
+!*.pyx
+!*.ipynb
+!*.R
+!*.r
+!*.Rmd
+!*.sh
+!*.bash
+!*.pl
+!*.jl
+!*.cpp
+!*.c
+!*.h
+!*.hpp
+!*.js
+!*.sql
+!*.smk
+!Snakefile
+!Makefile
+!Dockerfile
+!*.nf
+
+# ---- Configuration ----
+!*.yaml
+!*.yml
+!*.toml
+!*.cfg
+!*.ini
+!*.conf
+!*.json
+!.gitignore
+!.gitattributes
+!.dockerignore
+!environment.yml
+!requirements*.txt
+!setup.py
+!setup.cfg
+!pyproject.toml
+!MANIFEST.in
+!DESCRIPTION
+!NAMESPACE
+
+# ---- Documentation ----
+!*.md
+!*.rst
+!README*
+!LICENSE*
+!CITATION*
+
+# ---- Re-exclude cruft that would otherwise slip through ----
+.ipynb_checkpoints/
+**/.ipynb_checkpoints/
+__pycache__/
+**/__pycache__/
+*.py[cod]
+*.egg-info/
+.virtual_documents/
+wandb/
+mlruns/
+lightning_logs/
