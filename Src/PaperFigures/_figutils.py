@@ -777,27 +777,6 @@ def _bh_down_columns(P):
     return out
 
 
-def bh_with_m(p, m):
-    """BH step-up q-values using ``m`` as the number of tests rather than ``len(p)``.
-
-    This is the correction behind the ``fdr`` column of the ``*_fdr8000.csv`` tables:
-    BH over a fixed universe of ``m`` genes. NB it is applied to all ~23k tested
-    genes, so with m < len(p) it is anti-conservative relative to a plain BH over
-    what was actually tested; see the note in ``Figure5_legends.md``.
-
-    ``_add_fdr8000.py`` keeps its own copy of this so it can run without importing
-    scanpy; keep the two in step.
-    """
-    p = np.asarray(p, dtype=float)
-    n = p.size
-    order = np.argsort(p, kind="mergesort")
-    qs = p[order] * m / np.arange(1, n + 1)
-    qs = np.clip(np.minimum.accumulate(qs[::-1])[::-1], 0, 1)   # monotone (step-up)
-    q = np.empty(n)
-    q[order] = qs
-    return q
-
-
 def load_perturbation_de(path, day, perts=None, fdr_across="table", n_genes=8000,
                          chunksize=1_000_000):
     """Read a precomputed per-perturbation DE table (pdex CSV) into beta/p/FDR matrices.

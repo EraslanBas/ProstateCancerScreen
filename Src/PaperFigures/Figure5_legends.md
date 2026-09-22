@@ -70,20 +70,13 @@ set in Fig S5H.
 `Fig5F_volcano_NEUROG1_SIM1_day10.pdf` · Fig4L_Fig5FG_S15__Perturbation_Gene_Effects.ipynb
 
 Volcano of the NEUROG1+SIM1 double knockout against non-targeting controls at day10,
-**within the differentiated compartment** (NEPC-A-1 + NEPC-A-2), the compartment
-Figure 5G also concerns. x is the log2 fold-change against NTC, y is -log10 of the
-uncorrected p-value. Genes at FDR < 0.1 are coloured by direction (red, increased;
-blue, decreased); the 15 most significant are labelled, and senescence/SASP genes are
-ringed and labelled in bold so they can be followed into 5G. Of 23,423 genes tested,
-769 reach FDR < 0.1 (762 increased, 7 decreased), among them three senescence genes:
-GADD45B, PLAU and SENP2.
-
-The comparison is made within the differentiated compartment rather than pooled over
-all six states because pooling dilutes it: on the same correction the all-states table
-yields 672 significant genes and the differentiated compartment 769. Restricting to a
-subset of cells costs statistical power, so a count that rises indicates a
-compartment-specific effect rather than one produced by cells redistributing between
-states.
+across all six cell states, the same population Figure 5G models and the same table
+and correction used for Figure 4L. x is the log2 fold-change against NTC, y is -log10
+of the uncorrected p-value. Genes at FDR < 0.1 are coloured by direction (red,
+increased; blue, decreased); the 15 most significant are labelled, and senescence/SASP
+genes are ringed and labelled in bold so they can be followed into 5G. Of 23,423 genes
+tested, 672 reach FDR < 0.1 (669 increased, 3 decreased), among them seven senescence
+genes: CDKN1A, FZR1, GADD45B, MTAP, PLAU, SENP1 and SENP2.
 
 The near-total absence of decreased genes is a detection limit, not a property of the
 perturbation: median NTC expression across tested genes is approximately 0.04, so a
@@ -132,15 +125,17 @@ state×perturbation (S5G) accessibility, and TF-motif-accessibility vs RNA expre
 3. **ATAC supplement numbering.** The ATAC supplements use an independent **S5A–H** scheme that
    collides with the RNA **S05**; renumber into the single S-sequence when finalising the paper.
 
-4. **Significance basis of 5F.** 5F applies the same 8000-test-fixed
-   Benjamini-Hochberg correction as 4L and 5G (`fu.bh_with_m`), recomputed in the
-   notebook because `_add_fdr8000.py` was only ever run on the all-states table. That
-   correction fixes the test count at 8,000 while all 23,423 genes are tested, so it
-   is anti-conservative: a standard correction over the tested genes gives 362
-   significant genes in this compartment rather than 769. Kept for consistency across
-   4L, 5F and 5G; worth stating in the methods.
+4. **Significance basis of 5F.** 5F uses the `fdr` column of
+   `Day10DEGs_fdr8000.csv`, the same one behind 4L and 5G, so the three panels agree.
+   `_add_fdr8000.py` produces it by fixing the test count at 8,000 while all 23,423
+   genes are tested, which is anti-conservative: a standard correction over the tested
+   genes gives 74 significant genes rather than 672. Worth stating in the methods if a
+   reviewer asks how 672 was reached.
 
-5. **CDKN1A is not significant in 5F.** It is significant in the all-states
-   comparison and is force-included as a column of 4L, but within the differentiated
-   compartment it does not reach FDR < 0.1. If the senescence argument leans on p21,
-   that difference should be addressed rather than left for a reviewer to notice.
+5. **5F and 5G both use all six cell states.** 5G passes `states=fu.STATE_ORDER`,
+   overriding `interaction_doxo1_ols`'s own default of the non-NE compartment, and 5F
+   matches it. Restricting either to the differentiated compartment changes the picture
+   materially: the volcano gives 769 significant genes instead of 672, but 5G's total
+   effect drops from 7 of 7 senescence genes to 4 of 7 on 38 double-knockout cells
+   instead of 486, and CDKN1A and MTAP stop being significant. Worth a sentence in the
+   methods that these panels are computed across all states.
