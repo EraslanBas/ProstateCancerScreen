@@ -6,13 +6,14 @@ knocked out singly and in pairs and assayed by scRNA-seq at two time points
 (`day04`, `day10`). After removing cells carrying three or more guide assignments,
 291,301 cells across 92 perturbation groups enter the analysis.
 
-The repository produces the panels of **Figure 4**, **Figure 5F** and
-**Supplementary Figures S01 to S17**: 28 vector PDFs written to
-`Src/PaperFigures/figures/`.
+The screen was assayed as a **multiome** experiment, so this repository produces the
+panels of **Figure 4**, **Figure 5** and the **supplementary figures** from two
+modalities whose figure code shares `Src/PaperFigures/`:
 
-A paired single-cell **ATAC** (chromatin-accessibility) modality from the same
-multiome experiment is analysed under `Src/ComboScreen/ATAC/`; it produces **Figure 5A–E** and
-its supplements. See [ATAC (chromatin) analysis](#atac-chromatin-analysis) below.
+- **RNA** (Perturb-seq) — Figure 4, Figure 5F and Supplementary Figures S01–S17.
+- **ATAC** (chromatin accessibility) — Figure 5A–E and its supplements; the ATAC
+  pipeline lives under `Src/ComboScreen/ATAC/` (see
+  [ATAC (chromatin) analysis](#atac-chromatin-analysis)).
 
 ## External inputs
 
@@ -77,9 +78,13 @@ The Pseudotime notebook must run before the Interaction and Perturbation
 notebooks: those two read `figures/Fig2_state_enrichment_{day}.csv` to define
 their perturbation set. Nothing enforces this in code.
 
+The **ATAC** panels (Figure 5A–E and the S5 supplements) are produced by the ATAC
+notebooks in the same folder (`Fig5A_*`–`Fig5E_*`, `FigS5*`), generated from
+`_build_notebooks.py` / `_build_qc_notebook.py`; see the ATAC section below.
+
 Panel legends and the statistics as actually implemented are in
-`Src/PaperFigures/Figure4_legends.md`, `Figure5_legends.md` and
-`Supplementary_figures.md`.
+`Src/PaperFigures/Figure4_legends.md`, `Figure5_legends.md` (all of Figure 5, RNA + ATAC)
+and `Supplementary_figures.md` (all supplements, RNA + ATAC).
 
 ### Panel naming
 
@@ -91,14 +96,17 @@ name (`Fig4B_umap_doxo1`), and `savefig` writes the published name. A key mapped
 This indirection means renumbering a figure is a one-line edit in `PAPER_PANELS`.
 Run `python Src/PaperFigures/_panel_names.py` afterwards: it re-derives what each
 notebook writes and reports any filename that no longer matches, and `--fix`
-renames them.
+renames them. This applies to the RNA notebooks; the ATAC notebooks name their panels
+directly through `savepanel` in `paperfig_style.py`.
 
 ## Environment
 
-The figure notebooks run under the conda `base` environment (scanpy 1.9.1,
+The RNA figure notebooks run under the conda `base` environment (scanpy 1.9.1,
 anndata 0.9.2, pandas 1.4.3, matplotlib 3.5.2, seaborn 0.11.2, statsmodels 0.13.2).
 `Src/ComboScreen/Install_python_req.sh` creates a minimal venv. Step 2 additionally
-needs the `pdex` package and runs in its own environment.
+needs the `pdex` package and runs in its own environment. The ATAC figure notebooks
+run under a separate `scanpy_env` kernel (scanpy + leidenalg); the ATAC pipeline needs
+R + ArchR.
 
 Execute a notebook headlessly with:
 
@@ -110,22 +118,26 @@ jupyter nbconvert --to notebook --execute --inplace \
 
 ## Data files
 
-No data is tracked. `.gitignore` is an allowlist: it excludes everything, then
-re-includes source and documentation extensions. The single data exception is
-`Doxo_1_differentiated.DEGs.csv`, an input that no code regenerates; every derived
-table, h5ad and PDF stays out.
+`.gitignore` is an allowlist: it excludes everything, then re-includes source and
+documentation extensions. Large data (h5ad objects, ArchR arrows, the big derived
+matrices) and all PDFs stay out. Two sets of small result tables are committed as
+exceptions, because the figures read them and no lightweight code regenerates them:
+`Src/ComboScreen/Doxo_1_differentiated.DEGs.csv` (an RNA input) and the ATAC result
+CSVs under `Src/ComboScreen/ATAC/CSV_Files/` (allowlisted so the chromatin panels
+reproduce without the ArchR data; the >100 MB matrices there are still excluded).
 
 The h5ad objects are large (`ComboScreen.h5ad` 13 GB, `ComboScreen_processed.h5ad`
 19 GB) and the per-perturbation DE tables are 300 to 400 MB each.
 
 ## Repository contents
 
-Every tracked file is on the figure path. `Src/ComboScreen/` holds the three steps
-that build the inputs (`00_Build_ComboScreen.py`, `ComputeDE_day04.ipynb`,
-`ComputeDE_day10.ipynb`), their shared imports (`libraries.py`), the Doxo1
-signature and the environment script. `Src/PaperFigures/` holds the preparation
-notebook, the four figure notebooks, the shared `_figutils.py`, the
-`_panel_names.py` checker and the panel legends.
+Every tracked file is on the figure path. `Src/ComboScreen/` holds the RNA steps that
+build the inputs (`00_Build_ComboScreen.py`, `ComputeDE_day04.ipynb`,
+`ComputeDE_day10.ipynb`), their shared imports (`libraries.py`), the Doxo1 signature
+and the environment script, plus the **`ATAC/`** subtree (chromatin pipeline + result
+CSVs). `Src/PaperFigures/` holds the shared figure code for both modalities: the RNA
+preparation and figure notebooks with `_figutils.py` / `_panel_names.py`, the ATAC
+notebooks with `paperfig_style.py` / `_build_notebooks.py`, and the panel legends.
 
 Exploratory work and earlier analyses were removed after the first release:
 the ComboScreen exploratory notebooks (`01_Data_outlook`, `02_TestDETFs`,
