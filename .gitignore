@@ -80,3 +80,14 @@ lightning_logs/
 # ---- Local editor / tool configuration (machine-specific) ----
 .claude/settings.local.json
 **/.claude/settings.local.json
+
+# ---- ATAC analysis result CSVs (small/medium; committed so the ATAC panels reproduce) ----
+!Src/ComboScreen/ATAC/CSV_Files/**/*.csv
+# ...but NEVER the large regenerable matrices (exceed GitHub's 100MB limit or are bulky
+#    intermediates that the figures don't read; regenerate via the R pipeline / export scripts).
+Src/ComboScreen/ATAC/CSV_Files/ATAC_LSI.csv
+Src/ComboScreen/ATAC/CSV_Files/PertPeaksFC.csv
+Src/ComboScreen/ATAC/CSV_Files/PertPeaksFC_ptpeaks.csv
+Src/ComboScreen/ATAC/CSV_Files/MotifMatrixTFGroups_hocomoco.csv
+Src/ComboScreen/ATAC/CSV_Files/MotifMatrixTFGroups_hocomoco_pseudotime.csv
+Src/ComboScreen/ATAC/CSV_Files/PseudotimePeaksFC.csv

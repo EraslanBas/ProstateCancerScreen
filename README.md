@@ -10,6 +10,10 @@ The repository produces the panels of **Figure 4**, **Figure 5F** and
 **Supplementary Figures S01 to S17**: 28 vector PDFs written to
 `Src/PaperFigures/figures/`.
 
+A paired single-cell **ATAC** (chromatin-accessibility) modality from the same
+multiome experiment is analysed under `Src/ComboScreen/ATAC/`; it produces **Figure 5A–E** and
+its supplements. See [ATAC (chromatin) analysis](#atac-chromatin-analysis) below.
+
 ## External inputs
 
 The pipeline starts from two AnnData objects that are **produced outside this
@@ -129,3 +133,37 @@ the ComboScreen exploratory notebooks (`01_Data_outlook`, `02_TestDETFs`,
 `TestDoxo1Signature`) and the pilot and single-knockout analyses, which ran on
 different datasets (`adataALL.h5ad`, `adata_20K.h5ad`, `AbbasAnndata.h5ad`).
 All of it remains in the git history.
+
+## ATAC (chromatin) analysis
+
+`Src/ComboScreen/ATAC/` holds the single-cell **ATAC** arm of the same multiome experiment:
+reproducible peak calling, motif-based **TF motif accessibility**, and the chromatin
+panels of **Figure 5A–E** plus supplements. Built on ArchR (hg38) + HOCOMOCO v11.
+
+**Pipeline (`Src/ComboScreen/ATAC/`).** ArrowFiles + reproducible peaks (`CreateArrowFiles.r`,
+`parallel_arrows/`, `01_*`), motif matrix + TF grouping (`02_*`, `06_*`), then
+differential peaks and per-peak-Log2FC → motif regression giving TF motif
+accessibility per cell state, pseudotime segment and perturbation (`03_*`–`14_*`).
+These steps read the ArchR arrows/projects (large, external, on local storage) and
+are **not** reproducible from a clone alone.
+
+**Figures (`Src/PaperFigures/`, shared with the RNA figures).** The ATAC figure code
+(`_build_notebooks.py`, `_build_qc_notebook.py`, `paperfig_style.py`, `_export_*`) lives
+alongside the RNA notebooks; it generates one notebook per panel (kernel `scanpy_env`):
+
+- **Fig 5A/B** — UMAP from the ATAC profile (IterativeLSI on a genome-wide TileMatrix),
+  coloured by the RNA-defined cell state / pseudotime — cross-modal concordance
+  (ARI ≈ 0.68 between ATAC clusters and RNA states; |ρ| ≈ 0.71 for pseudotime).
+- **Fig 5C** — TF motif accessibility per cell state; **5D** — along pseudotime
+  (root NE → differentiated tip); **5E** — TF motif accessibility vs RNA expression
+  (examples: GRHL2 concordant; ZEB1/NFIC/ZBTB14 discordant).
+- **Supplements** — ATAC QC, pseudotime segments (ATAC vs RNA UMAP), per-perturbation
+  and state×perturbation accessibility, and TF-motif-accessibility-vs-mRNA. Legends
+  in `Src/PaperFigures/Figure5_ATAC_legends.md`.
+
+**Data policy (differs from the RNA side).** The small/medium ATAC result CSVs *are*
+committed under `Src/ComboScreen/ATAC/CSV_Files/` (allowlisted in `.gitignore`) so the chromatin
+panels reproduce without the ArchR data; the large regenerable matrices (`ATAC_LSI`,
+`PertPeaksFC*`, the motif matrices, `PseudotimePeaksFC`) stay out. The UMAP /
+pseudotime panels additionally read the external `ComboScreen_processed.h5ad`
+(19 GB; set `ATAC_H5AD` to its path).
