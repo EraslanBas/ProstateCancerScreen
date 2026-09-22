@@ -70,3 +70,11 @@ __pycache__/
 wandb/
 mlruns/
 lightning_logs/
+
+# ---- Small INPUT tables that the pipeline reads (outputs stay excluded) ----
+# The allowlist above drops every .csv, which is right for the multi-hundred-MB
+# derived tables but wrong for these, which are inputs with no code that
+# regenerates them. Without them a fresh clone cannot run 00_Prepare_data.
+!Src/ComboScreen/Doxo_1_differentiated.DEGs.csv
+!Src/ComboScreen/Programs_K14.csv
+!Src/Human_TFs.csv
