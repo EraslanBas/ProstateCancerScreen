@@ -21,7 +21,7 @@ silently emit an unnumbered file. The numbering below is therefore contiguous an
 
 Supplementary figures S1-S15 support main Figure 4; S16-S17 support Figure 5.
 The NEUROG1+SIM1 senescence-gene panel that was S16 has been promoted to a main
-panel of Figure 5 and is written as `Fig5F_senescence_interaction_NEUROG1_SIM1_day10.pdf` (Figure 5F)
+panel of Figure 5 and is written as `Fig5G_senescence_interaction_NEUROG1_SIM1_day10.pdf` (Figure 5G)
 (legend in `Figure5_legends.md`).
 
 Three of the published panels are the day04 counterparts of day10 main panels and are

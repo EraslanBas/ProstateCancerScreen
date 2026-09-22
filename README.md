@@ -72,7 +72,7 @@ Each notebook is named after the panels it writes.
 | `Fig4BCFGHJ_S07-S08_S10-S11_S16-S17__Pseudotime.ipynb` | 4B, 4C, 4F, 4G, 4H, 4J | S07, S08, S10, S11, S16, S17 |
 | `Fig4DE_S01-S06_S09__Overview_UMAP.ipynb` | 4D, 4E | S01 to S06, S09 |
 | `Fig4K_S12-S14__Interaction_Doxo1.ipynb` | 4K | S12, S13, S14 |
-| `Fig4L_Fig5F_S15__Perturbation_Gene_Effects.ipynb` | 4L, 5F | S15 |
+| `Fig4L_Fig5FG_S15__Perturbation_Gene_Effects.ipynb` | 4L, 5F, 5G | S15 |
 
 The Pseudotime notebook must run before the Interaction and Perturbation
 notebooks: those two read `figures/Fig2_state_enrichment_{day}.csv` to define

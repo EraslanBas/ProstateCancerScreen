@@ -777,6 +777,27 @@ def _bh_down_columns(P):
     return out
 
 
+def bh_with_m(p, m):
+    """BH step-up q-values using ``m`` as the number of tests rather than ``len(p)``.
+
+    This is the correction behind the ``fdr`` column of the ``*_fdr8000.csv`` tables:
+    BH over a fixed universe of ``m`` genes. NB it is applied to all ~23k tested
+    genes, so with m < len(p) it is anti-conservative relative to a plain BH over
+    what was actually tested; see the note in ``Figure5_legends.md``.
+
+    ``_add_fdr8000.py`` keeps its own copy of this so it can run without importing
+    scanpy; keep the two in step.
+    """
+    p = np.asarray(p, dtype=float)
+    n = p.size
+    order = np.argsort(p, kind="mergesort")
+    qs = p[order] * m / np.arange(1, n + 1)
+    qs = np.clip(np.minimum.accumulate(qs[::-1])[::-1], 0, 1)   # monotone (step-up)
+    q = np.empty(n)
+    q[order] = qs
+    return q
+
+
 def load_perturbation_de(path, day, perts=None, fdr_across="table", n_genes=8000,
                          chunksize=1_000_000):
     """Read a precomputed per-perturbation DE table (pdex CSV) into beta/p/FDR matrices.
@@ -1193,18 +1214,26 @@ def interaction_de_2gene(adata, g1="NEUROG1", g2="SIM1", states=None, use_raw=Fa
 
 def volcano_plot(ax, df, effect, fdr_thr=0.05, eff_thr=0.1, top_n=12,
                  up_color="#d62728", down_color="#1f77b4", title=None,
-                 label=True, fontsize=6):
-    """Volcano of one interaction-model term (``g1``/``g2``/``int``/``total``).
+                 label=True, fontsize=6, highlight=None,
+                 highlight_color="#111111", xlabel="Effect size (Δ log-expr vs NTC)"):
+    """Volcano of one effect column of ``df`` (``beta_``/``p_``/``fdr_`` + ``effect``).
 
-    x = effect size (model coefficient, Δ log-expr vs NTC), y = -log10(p);
-    genes with FDR<``fdr_thr`` and |effect|>``eff_thr`` are coloured by sign and
-    the ``top_n`` most significant are labelled. Returns the significant genes.
+    x = effect size, y = -log10(p); genes with FDR<``fdr_thr`` and
+    |effect|>``eff_thr`` are coloured by sign and the ``top_n`` most significant are
+    labelled. Works both for an interaction-model term (``g1``/``g2``/``int``/
+    ``total``) and for a per-perturbation DE table, where the effect is the log2
+    fold-change vs NTC; pass ``xlabel`` to say which.
+
+    ``highlight`` is an optional set of genes (e.g. the senescence panel of 4L) to
+    ring and always label, so the same genes can be followed across panels.
+    Returns the significant genes.
     """
     x = df[f"beta_{effect}"].values
     pv = df[f"p_{effect}"].values
     q = df[f"fdr_{effect}"].values
     y = -np.log10(np.clip(pv, 1e-300, None))
     sig = (q < fdr_thr) & (np.abs(x) >= eff_thr)
+    genes = df.index.values
 
     ax.scatter(x[~sig], y[~sig], s=4, color="0.8", lw=0, rasterized=True)
     ax.scatter(x[sig & (x > 0)], y[sig & (x > 0)], s=9, color=up_color, lw=0)
@@ -1212,16 +1241,36 @@ def volcano_plot(ax, df, effect, fdr_thr=0.05, eff_thr=0.1, top_n=12,
     ax.axvline(0, color="k", lw=0.5)
     for s in (-eff_thr, eff_thr):
         ax.axvline(s, color="0.6", ls=":", lw=0.6)
+
+    hit = np.zeros(len(genes), dtype=bool)
+    if highlight:
+        hit = np.isin(genes, list(highlight)) & sig
+        if hit.any():
+            ax.scatter(x[hit], y[hit], s=34, facecolor="none",
+                       edgecolor=highlight_color, lw=1.1, zorder=4)
+
     if label and sig.any():
         idx = np.where(sig)[0]
-        top = idx[np.argsort(pv[idx])[:top_n]]
-        genes = df.index.values
-        for i in top:
-            ax.annotate(genes[i], (x[i], y[i]), fontsize=fontsize,
-                        ha="left" if x[i] >= 0 else "right",
-                        xytext=(2 if x[i] >= 0 else -2, 1),
-                        textcoords="offset points")
-    ax.set_xlabel("Effect size (Δ log-expr vs NTC)")
+        top = list(idx[np.argsort(pv[idx])[:top_n]]) + list(np.where(hit)[0])
+        texts = []
+        for i in dict.fromkeys(top):                 # de-duplicate, keep order
+            texts.append(ax.text(x[i], y[i], genes[i], fontsize=fontsize, zorder=5,
+                                 color=highlight_color if hit[i] else "black",
+                                 fontweight="bold" if hit[i] else "normal",
+                                 ha="left" if x[i] >= 0 else "right"))
+        # The significant cloud is dense, so static offsets overlap badly. Repel the
+        # labels off each other and off the points where adjustText is installed;
+        # fall back to a small fixed nudge when it is not.
+        try:
+            from adjustText import adjust_text
+            adjust_text(texts, x=x[sig], y=y[sig], ax=ax,
+                        expand_points=(1.3, 1.5), expand_text=(1.2, 1.4),
+                        force_text=(0.4, 0.8), force_points=(0.2, 0.4),
+                        arrowprops=dict(arrowstyle="-", color="0.5", lw=0.4))
+        except ImportError:
+            for t in texts:
+                t.set_position((t.get_position()[0], t.get_position()[1] + 0.03))
+    ax.set_xlabel(xlabel)
     ax.set_ylabel("-log10 p")
     if title:
         ax.set_title(title, fontsize=10)
@@ -1254,7 +1303,8 @@ PAPER_PANELS = {
     "geneeffects_perturbation_gene_heatmap_day10":       "Fig4L_perturbation_gene_heatmap_day10",
 
     # ---- Figure 5 (main) -------------------------------------------------
-    "geneeffects_senescence_interaction_NEUROG1+SIM1_day10": "Fig5F_senescence_interaction_NEUROG1_SIM1_day10",
+    "geneeffects_volcano_NEUROG1+SIM1_day10": "Fig5F_volcano_NEUROG1_SIM1_day10",
+    "geneeffects_senescence_interaction_NEUROG1+SIM1_day10": "Fig5G_senescence_interaction_NEUROG1_SIM1_day10",
 
     # ---- Supplementary group 1: data quality control ---------------------
     "overview_QC_depth":                   "FigS01_QC_sequencing_depth",
