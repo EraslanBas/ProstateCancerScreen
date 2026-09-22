@@ -159,7 +159,7 @@ alongside the RNA notebooks; it generates one notebook per panel (kernel `scanpy
   (examples: GRHL2 concordant; ZEB1/NFIC/ZBTB14 discordant).
 - **Supplements** — ATAC QC, pseudotime segments (ATAC vs RNA UMAP), per-perturbation
   and state×perturbation accessibility, and TF-motif-accessibility-vs-mRNA. Legends
-  in `Src/PaperFigures/Figure5_ATAC_legends.md`.
+  in `Src/PaperFigures/Figure5_legends.md` (5A–E) and `Supplementary_figures.md` (S5A–H).
 
 **Data policy (differs from the RNA side).** The small/medium ATAC result CSVs *are*
 committed under `Src/ComboScreen/ATAC/CSV_Files/` (allowlisted in `.gitignore`) so the chromatin
