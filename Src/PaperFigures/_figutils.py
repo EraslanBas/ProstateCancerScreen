@@ -1230,13 +1230,82 @@ def volcano_plot(ax, df, effect, fdr_thr=0.05, eff_thr=0.1, top_n=12,
 
 
 # ---------------------------------------------------------------------------
+# Manuscript figure numbering
+# ---------------------------------------------------------------------------
+# Single source of truth mapping each notebook's internal panel name to the name
+# it is published under. `savefig` consults this, so notebooks keep their own
+# (stable) names and only this table changes when the numbering changes.
+# Anything absent from the table is written under its own name unchanged.
+#
+#   Figure 4      -> main figure panels
+#   FigS01-S03    -> supplementary group 1: data quality control
+#   FigS04-S17    -> supplementary group 2: complementary to the presented analysis
+#                    (e.g. the day04 counterpart of a day10 main panel)
+PAPER_PANELS = {
+    # ---- Figure 4 (main) -------------------------------------------------
+    "pseudotime_a2_umap_doxo1":                          "Fig4B_umap_doxo1",
+    "pseudotime_a1_backbone":                 "Fig4C_pseudotime_backbone",
+    "overview_b_umap_timepoint":                       "Fig4D_umap_timepoint",
+    "overview_a_umap_cellstate":                       "Fig4E_umap_cellstate",
+    "pseudotime_a3_doxo1_vs_pseudotime":                 "Fig4F_doxo1_vs_pseudotime",
+    "pseudotime_c_state_enrichment_heatmap_day04":       "Fig4G_state_enrichment_heatmap_day04",
+    "pseudotime_c_state_enrichment_heatmap_day10":       "Fig4H_state_enrichment_heatmap_day10",
+    "pseudotime_e1_doxo1_vs_pseudotime_rollcells_day10": "Fig4J_doxo1_vs_pseudotime_rollcells_day10",
+    "interaction_heatmap_day10":             "Fig4K_interaction_heatmap_day10",
+    "geneeffects_perturbation_gene_heatmap_day10":       "Fig4L_perturbation_gene_heatmap_day10",
+
+    # ---- Figure 5 (main) -------------------------------------------------
+    "geneeffects_senescence_interaction_NEUROG1+SIM1_day10": "Fig5F_senescence_interaction_NEUROG1_SIM1_day10",
+
+    # ---- Supplementary group 1: data quality control ---------------------
+    "overview_QC_depth":                   "FigS01_QC_sequencing_depth",
+    "overview_QC_panels":                  "FigS02_QC_library_composition_panels",
+    "overview_QC_cells_per_perturbation":  "FigS03_QC_cells_per_perturbation",
+
+    # ---- Supplementary group 2: complementary to the presented analysis --
+    "overview_c_umap_phase":                             "FigS04_Comp_umap_cellcycle_phase",
+    # not published: plain pseudotime UMAP, superseded by Figure 4C.
+    # None = savefig skips the file entirely.
+    "pseudotime_a_umap_pseudotime":                        None,
+    "overview_e_umap_state_scores":                      "FigS05_Comp_umap_state_signature_scores",
+    "overview_f_marker_dotplot":                         "FigS06_Comp_state_marker_dotplot",
+    "pseudotime_b_by_state":                    "FigS07_Comp_pseudotime_by_state",
+    # not published (dropped from the figure set):
+    "pseudotime_a4_umap_cdkn1a":                           None,
+    "pseudotime_a5_cdkn1a_vs_pseudotime":                  "FigS08_Comp_CDKN1A_vs_pseudotime",
+    "overview_d_composition_by_time":                    "FigS09_Comp_composition_control_vs_perturbed",
+    "pseudotime_c_timepoint_state_barplots":               "FigS10_Comp_timepoint_state_composition",
+    # not published (dropped from the figure set):
+    "pseudotime_d_density_enriched_byday":      None,
+    "pseudotime_e1_doxo1_vs_pseudotime_rollcells_day04":   "FigS11_Comp_doxo1_vs_pseudotime_day04",
+    # not published (dropped from the figure set):
+    "pseudotime_e1_doxo1_vs_pseudotime_fixedpt_day04":     None,
+    # not published (dropped from the figure set):
+    "pseudotime_e1_doxo1_vs_pseudotime_fixedpt_day10":     None,
+    "pseudotime_e_doxo1_vs_pseudotime":                    "FigS16_Comp_doxo1_vs_pseudotime_wilcoxon_hits",
+    # not published (dropped from the figure set):
+    "pseudotime_e0_mixedlm_doxo1_state":                   None,
+    "interaction_heatmap_day04":               "FigS12_Comp_interaction_heatmap_day04",
+    "interaction_state_vs_doxo1_day04":                    "FigS13_Comp_state_vs_doxo1_day04",
+    "interaction_state_vs_doxo1_day10":                    "FigS14_Comp_state_vs_doxo1_day10",
+    "pseudotime_f_NEUROG1_SIM1_interaction":               "FigS17_Comp_NEUROG1_SIM1_interaction",
+    "geneeffects_perturbation_gene_heatmap_day04":         "FigS15_Comp_perturbation_gene_heatmap_day04",
+}
+
+
+# ---------------------------------------------------------------------------
 # Saving
 # ---------------------------------------------------------------------------
-def savefig(name, fig=None, formats=("pdf", "png"), tight=True, **kw):
-    """Write a figure to FIG_DIR in several formats (PDF for vector, PNG for preview)."""
+def savefig(name, fig=None, formats=("pdf",), tight=True, **kw):
+    """Write a figure to FIG_DIR as vector PDF (pass `formats` for other types)."""
     fig = fig or plt.gcf()
     if tight:
         fig.tight_layout()
+    out = PAPER_PANELS.get(name, name)          # published name, if this panel has one
+    if out is None:                             # explicitly not part of the figure set
+        print(f"skipped {name} (not published)")
+        return
     for ext in formats:
-        fig.savefig(FIG_DIR / f"{name}.{ext}", dpi=300, bbox_inches="tight", **kw)
-    print(f"saved {name} -> {', '.join(formats)}")
+        fig.savefig(FIG_DIR / f"{out}.{ext}", dpi=300, bbox_inches="tight", **kw)
+    label = f"{out}  [{name}]" if out != name else name
+    print(f"saved {label} -> {', '.join(formats)}")
