@@ -1,0 +1,184 @@
+#!/usr/bin/env python
+"""
+_build_qc_notebook.py — build (and optionally execute) the ATAC QC notebook.
+
+Produces FigS5_QC_ATAC.ipynb: the ArchR-standard scATAC QC panels that are
+MEANINGFUL for this dataset, plotted in paperfig_style from the CSVs exported by
+_export_atac_qc.R. Fragment-size / nucleosome QC is intentionally excluded —
+the input is a single-base insertion-site file, so those metrics are degenerate.
+
+    /home/eraslab1/miniconda3/bin/python _build_qc_notebook.py         # build
+    /home/eraslab1/miniconda3/bin/python _build_qc_notebook.py --run   # build + execute
+"""
+import sys, os
+import nbformat as nbf
+from nbformat.v4 import new_notebook, new_code_cell, new_markdown_cell
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+KERNEL = "scanpy_env"
+HDR = "from paperfig_style import *\nimport numpy as np, pandas as pd, matplotlib.pyplot as plt\nQC = os.path.join(CSV_DIR, 'QC')\n"
+
+CELLS = []
+def md(s):   CELLS.append(("md", s))
+def code(s): CELLS.append(("code", s))
+
+md("# Fig S5 — scATAC QC (ArchR)\n"
+   "Quality-control panels for the TF-screen ATAC modality, following the ArchR QC "
+   "workflow. Metrics are read from the ArchR arrow / cell-state project via "
+   "`_export_atac_qc.R`.\n\n"
+   "### Background — what we are checking\n"
+   "In ATAC-seq the **Tn5 transposase inserts adapters only into *open* (accessible) "
+   "chromatin**. Good data therefore has two properties, and every panel below tests one "
+   "or both:\n\n"
+   "1. **Signal is specific** — insertions concentrate in genuinely open regions (promoters, "
+   "peaks) rather than being scattered like random genomic DNA. Measured by **TSS "
+   "enrichment** (panels a, b, e) and **FRIP** (panel d).\n"
+   "2. **Each cell has enough data** — enough unique Tn5 insertions to be informative. "
+   "Measured by **unique fragments** (panels a, c).\n\n"
+   "Empty droplets, dead cells and ambient DNA fail one or both and must be removed "
+   "(panel a).\n\n"
+   "### The two core metrics\n"
+   "* **Unique fragments (nFrags)** — number of distinct Tn5 insertion events recovered for "
+   "a barcode = library depth/complexity for that cell. Plotted on a log10 axis because it "
+   "spans orders of magnitude.\n"
+   "* **TSS enrichment score** — how strongly a cell's insertions pile up at transcription "
+   "start sites vs. background DNA (defined in detail in panel e). A signal-to-noise ratio: "
+   "≈1 means no preference (junk); high means clean, promoter-focused signal.\n\n"
+   "**Note:** the input is a single-base **insertion-site** fragments file (width-1), so "
+   "ArchR's fragment-size and nucleosome-banding metrics are degenerate "
+   "(`nDiFrags = nMultiFrags = NucleosomeRatio = 0`) and are deliberately omitted. "
+   "The meaningful QC here is TSS enrichment, unique fragments, and FRIP.")
+
+code(HDR)
+
+# ---- load ----
+code(
+"pf = pd.read_csv(os.path.join(QC, 'prefilter_tss_frags.csv'))          # all barcodes\n"
+"qc = pd.read_csv(os.path.join(QC, 'cellstate_qc.csv'), index_col=0)    # analysis cells + state\n"
+"print('barcodes:', len(pf), '| analysis cells:', len(qc))\n"
+"print('median TSS = %.2f | median nFrags = %.0f | median FRIP = %.3f'\n"
+"      % (qc['TSSEnrichment'].median(), qc['nFrags'].median(), qc['FRIP'].median()))\n"
+"# data-driven cell-calling guides = the analysis set's lower bounds\n"
+"TSS_MIN = float(qc['TSSEnrichment'].min()); FRAG_MIN = float(qc['nFrags'].min())\n"
+"print('analysis-set lower bounds: TSS >= %.2f, nFrags >= %.0f' % (TSS_MIN, FRAG_MIN))\n")
+
+# ---- QC-a: TSS vs log10(nFrags) density (cell calling) ----
+md("## Fig S5A — TSS enrichment vs unique fragments (cell calling)\n"
+   "**What it is.** Every *barcode* that ArchR saw (all 8.17M, cells + empty droplets) plotted "
+   "as a 2D density: x = log10(unique fragments) = depth, y = TSS enrichment = signal "
+   "specificity. Color = number of barcodes per hexbin (log scale). This is ArchR's signature "
+   "`TSS-by-Unique-Frags` cell-calling plot.\n\n"
+   "**How to read it.** Two clouds appear:\n"
+   "* **Lower-left (bright/dense)** — huge numbers of barcodes with *few* fragments and *low* "
+   "TSS enrichment. These are empty droplets / ambient DNA / dead cells: little data and no "
+   "promoter preference.\n"
+   "* **Upper-right block** — barcodes with *many* fragments *and* high TSS enrichment: real, "
+   "high-quality nuclei. A clear gap between the two is what you want to see.\n\n"
+   "**The dashed lines** are the retained-set lower bounds (here nFrags ≥ 200, TSS ≥ 1.32 — "
+   "the values printed by the load cell above); everything up-and-right of them is kept (n in "
+   "the title). Good separation means the filter is not slicing through one continuous blob.\n\n"
+   "> Note: these bounds are permissive (ArchR defaults are TSS ≥ 4, nFrags ≥ 1000). The kept "
+   "cells are nonetheless high quality (median TSS 11.8), but the exact cutoff is worth stating "
+   "in the methods.")
+code(
+"x = np.log10(pf['nFrags'].values); y = pf['TSSEnrichment'].values\n"
+"m = np.isfinite(x) & np.isfinite(y)\n"
+"fig, ax = plt.subplots(figsize=(3.6, 3.2))\n"
+"hb = ax.hexbin(x[m], y[m], gridsize=110, bins='log', cmap='viridis', mincnt=1,\n"
+"               extent=(0, np.nanpercentile(x[m],99.9), 0, np.nanpercentile(y[m],99.9)))\n"
+"ax.axvline(np.log10(FRAG_MIN), color='#B40426', ls='--', lw=0.8)\n"
+"ax.axhline(TSS_MIN, color='#B40426', ls='--', lw=0.8)\n"
+"ax.set_xlabel('log10(unique fragments)'); ax.set_ylabel('TSS enrichment')\n"
+"ax.set_title('Cell calling  (n=%s pass)' % f'{len(qc):,}', fontsize=8)\n"
+"cb = fig.colorbar(hb, ax=ax, fraction=0.045, pad=0.02); cb.set_label('log10 barcodes')\n"
+"cb.outline.set_linewidth(0.5)\n"
+"savepanel(fig, 'FigS5A_QC_CellCalling')\n")
+
+# ---- QC-b/c/d: distributions ----
+md("## Fig S5B — Per-cell QC distributions (analysis cells)\n"
+   "The same three quantities as histograms over the retained cells; dashed line = median. "
+   "These show the *typical* quality of a kept cell and that the distributions are healthy "
+   "(unimodal, no large low-quality tail).\n\n"
+   "* **b · TSS enrichment** — signal specificity per cell. Median **11.8** (ENCODE: >5 good, "
+   ">10 excellent).\n"
+   "* **c · log10(unique fragments)** — depth per cell. Median ≈ **6,700** fragments "
+   "(10^3.83), ample for peak-level analysis.\n"
+   "* **d · FRIP (Fraction of Reads In Peaks)** — of all a cell's insertions, the fraction "
+   "landing inside the called peak set. It is the peak-level signal-to-noise: high FRIP = most "
+   "of the data is in genuine accessible regions rather than background. Median **0.29** "
+   "(commonly ≥0.2–0.3 is considered good).")
+code(
+"fig, axs = plt.subplots(1, 3, figsize=(7.4, 2.4))\n"
+"specs = [('TSSEnrichment', 'TSS enrichment', None),\n"
+"         ('log10nFrags',   'log10(unique fragments)', None),\n"
+"         ('FRIP',          'FRIP (reads in peaks)', None)]\n"
+"for ax, (col, lab, _) in zip(axs, specs):\n"
+"    v = qc[col].dropna().values\n"
+"    ax.hist(v, bins=60, color='#4C72B0', linewidth=0)\n"
+"    med = np.median(v)\n"
+"    ax.axvline(med, color='#B40426', ls='--', lw=0.9)\n"
+"    ax.text(0.97, 0.95, f'median\\n{med:.2f}', transform=ax.transAxes, ha='right', va='top', fontsize=6)\n"
+"    ax.set_xlabel(lab); ax.set_ylabel('cells')\n"
+"fig.suptitle('Per-cell QC distributions', fontsize=8, y=1.02)\n"
+"savepanel(fig, 'FigS5B_QC_Distributions')\n")
+
+# ---- QC-e: TSS enrichment profile ----
+md("## Fig S5C — Aggregate TSS enrichment profile\n"
+   "**The idea.** A TSS is the promoter of a gene. Active promoters are **nucleosome-depleted "
+   "(open)**, and Tn5 only inserts into open chromatin — so insertions pile up at active TSSs "
+   "far more than in bulk genomic DNA. This panel makes that visible.\n\n"
+   "**What is plotted.** Tn5 insertions are aggregated across **all genes' TSSs at once** and "
+   "binned by distance from the TSS (−2000 → +2000 bp). The y-axis is **fold-enrichment over "
+   "background**: ArchR normalizes so the far flanks (ordinary genomic DNA, ±~2000 bp) = 1.0. "
+   "So y = 14 means *14× more insertions at the TSS than in background DNA*.\n\n"
+   "**How to read it.**\n"
+   "* A **sharp, tall central peak** (here ≈14×) = insertions strongly prefer open promoters "
+   "→ clean, real accessible-chromatin signal. Dead cells / ambient DNA give a **flat line "
+   "near 1** (no preference).\n"
+   "* The **small shoulder at ≈ +200 bp** is the **+1 nucleosome** — the first positioned "
+   "nucleosome just downstream of the open promoter; its presence indicates real nucleosomal "
+   "structure in the signal.\n\n"
+   "**Link to the per-cell score.** The per-cell **TSS enrichment score** used in panels a/b/f "
+   "is essentially the *height of this peak computed one cell at a time* (insertions in a "
+   "window at the TSS ÷ flanking background). This curve is the population-level version.")
+code(
+"prof_path = os.path.join(QC, 'tss_profile.csv')\n"
+"if os.path.exists(prof_path):\n"
+"    prof = pd.read_csv(prof_path)\n"
+"    cols = list(prof.columns)\n"
+"    xc = 'x' if 'x' in cols else next(c for c in cols if 'ist' in c.lower() or 'pos' in c.lower())\n"
+"    yc = ('smoothValue' if 'smoothValue' in cols else\n"
+"          'value' if 'value' in cols else\n"
+"          next(c for c in cols if prof[c].dtype.kind in 'fi' and c != xc))\n"
+"    gc = next((c for c in ['Group','group','sampleName','name'] if c in cols), None)\n"
+"    fig, ax = plt.subplots(figsize=(3.4, 3.0))\n"
+"    if gc:\n"
+"        for g, d in prof.groupby(gc): ax.plot(d[xc], d[yc], lw=1.2, label=str(g))\n"
+"        if prof[gc].nunique() > 1: ax.legend(fontsize=6)\n"
+"    else:\n"
+"        ax.plot(prof[xc], prof[yc], lw=1.4, color='#B40426')\n"
+"    ax.set_xlabel('distance to TSS (bp)'); ax.set_ylabel('normalized insertions')\n"
+"    ax.set_title('TSS enrichment profile', fontsize=8)\n"
+"    savepanel(fig, 'FigS5C_QC_TSSprofile')\n"
+"else:\n"
+"    print('tss_profile.csv not found — skipping panel e')\n")
+
+# ---- QC-f: per-state QC ----
+def build():
+    nb = new_notebook()
+    nb.cells = [new_markdown_cell(s) if k == "md" else new_code_cell(s) for k, s in CELLS]
+    nb.metadata["kernelspec"] = {"name": KERNEL, "display_name": KERNEL, "language": "python"}
+    nb.metadata["language_info"] = {"name": "python"}
+    path = os.path.join(HERE, "FigS5_QC_ATAC.ipynb")
+    nbf.write(nb, path); print("wrote", os.path.basename(path)); return path
+
+def run(path):
+    from nbclient import NotebookClient
+    print("executing", os.path.basename(path), "...", flush=True)
+    nb = nbf.read(path, as_version=4)
+    NotebookClient(nb, timeout=1800, kernel_name=KERNEL, resources={"metadata": {"path": HERE}}).execute()
+    nbf.write(nb, path); print("done")
+
+if __name__ == "__main__":
+    p = build()
+    if "--run" in sys.argv: run(p)
