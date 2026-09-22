@@ -7,6 +7,11 @@ and **G** are the **RNA** perturbation analysis
 (`Fig4L_Fig5FG_S15__Perturbation_Gene_Effects.ipynb`; published names from `PAPER_PANELS`
 in `_figutils.py`).
 
+**The two halves write to different directories.** The ATAC panels A-E are saved by
+`paperfig_style.savepanel` to `Src/PaperFigures/panels/`; the RNA panels F and G are saved
+by `fu.savefig` to `Src/PaperFigures/figures/`. The filenames below are bare, so check the
+right directory when collecting them.
+
 Shared methods (cell counts, normalisation, state definitions, pseudotime construction) are
 in `Figure4_legends.md`. Statistics quoted for the ATAC panels (ARI, ρ) are the values the
 notebooks print; update if the analysis is rerun.

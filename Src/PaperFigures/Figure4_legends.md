@@ -4,6 +4,8 @@ Draft legends for the ten panels currently assigned to Figure 4. Each entry give
 file, the notebook that writes it, what is plotted, and the statistics as actually
 implemented. Numbers were read off the saved result tables, not estimated.
 
+All ten panels are RNA and are written to `Src/PaperFigures/figures/` as vector PDFs.
+
 Author notes that need reconciling with the manuscript text are in the final section
 and are **not** intended for publication.
 
@@ -136,7 +138,7 @@ At day10, 14 of 19 interaction terms and 11 of 19 total effects are significant 
 FDR < 0.1; no single-gene main effect is.
 
 ## 4L — Gene-level effects of the double knockouts (day10)
-`Fig4L_perturbation_gene_heatmap_day10.pdf` · Fig4L_Fig5_S15__Perturbation_Gene_Effects.ipynb
+`Fig4L_perturbation_gene_heatmap_day10.pdf` · Fig4L_Fig5FG_S15__Perturbation_Gene_Effects.ipynb
 
 Log2 fold-change relative to NTC for the 19 double knockouts (rows) across 86 genes
 (columns), from per-perturbation differential expression with FDR recomputed by
