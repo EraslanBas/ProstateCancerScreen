@@ -32,15 +32,12 @@ the clustering that yields `final_label`, cell-cycle scoring and the state
 signature scoring. Everything downstream of these two objects is reproducible
 here; nothing upstream of them is.
 
-Two further inputs have no code that regenerates them:
+One further input has no code that regenerates it:
 
 - **`Src/ComboScreen/Doxo_1_differentiated.DEGs.csv`** (committed, 214 genes) is a
   scanpy `rank_genes_groups` export that defines the Doxo1 differentiation score.
   That score is the backbone of Figures 4B, 4F, 4J, 4K and 5F. It is versioned here
   as a fixed input; the comparison that produced it is not recorded.
-- **`Data/combined_sgRNA_assignment_df.final.csv`** is read by
-  `Src/ComboScreen/InvestigateGuideAssignment.ipynb`, which is exploratory and not
-  on the figure path.
 
 ## Pipeline
 
@@ -110,22 +107,25 @@ jupyter nbconvert --to notebook --execute --inplace \
 ## Data files
 
 No data is tracked. `.gitignore` is an allowlist: it excludes everything, then
-re-includes source and documentation extensions. The only data exceptions are three
-small input tables that no code regenerates (the Doxo1 signature, `Programs_K14.csv`
-and `Human_TFs.csv`); every derived table, h5ad and PDF stays out.
+re-includes source and documentation extensions. The single data exception is
+`Doxo_1_differentiated.DEGs.csv`, an input that no code regenerates; every derived
+table, h5ad and PDF stays out.
 
 The h5ad objects are large (`ComboScreen.h5ad` 13 GB, `ComboScreen_processed.h5ad`
 19 GB) and the per-perturbation DE tables are 300 to 400 MB each.
 
-## Other directories
+## Repository contents
 
-`Src/ComboScreen/` holds the wider ComboScreen analysis. On the figure path:
-`00_Build_ComboScreen.py` and the two `ComputeDE_day{04,10}.ipynb` notebooks.
-The rest is exploratory and kept for reference: `01_Data_outlook.ipynb` (the
-original pass, largely superseded by `Src/PaperFigures/00_Prepare_data.ipynb`),
-`02_TestDETFs.ipynb`, `03_PlotBetaMatrices.ipynb`, `InteractionModel.ipynb`,
-`InvestigateGuideAssignment.ipynb` and `TestDoxo1Signature.ipynb`.
+Every tracked file is on the figure path. `Src/ComboScreen/` holds the three steps
+that build the inputs (`00_Build_ComboScreen.py`, `ComputeDE_day04.ipynb`,
+`ComputeDE_day10.ipynb`), their shared imports (`libraries.py`), the Doxo1
+signature and the environment script. `Src/PaperFigures/` holds the preparation
+notebook, the four figure notebooks, the shared `_figutils.py`, the
+`_panel_names.py` checker and the panel legends.
 
-Earlier pilot and single-knockout analyses, which ran on different datasets
-(`adataALL.h5ad`, `adata_20K.h5ad`, `AbbasAnndata.h5ad`), were removed in the
-cleanup that followed the first release. They remain in the git history.
+Exploratory work and earlier analyses were removed after the first release:
+the ComboScreen exploratory notebooks (`01_Data_outlook`, `02_TestDETFs`,
+`03_PlotBetaMatrices`, `InteractionModel`, `InvestigateGuideAssignment`,
+`TestDoxo1Signature`) and the pilot and single-knockout analyses, which ran on
+different datasets (`adataALL.h5ad`, `adata_20K.h5ad`, `AbbasAnndata.h5ad`).
+All of it remains in the git history.

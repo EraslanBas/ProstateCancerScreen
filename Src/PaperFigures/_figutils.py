@@ -6,9 +6,8 @@ below so that paths, palettes, plot styling and label conventions live in exactl
 one place.
 
 The canonical object is ``Data/ComboScreen_processed.h5ad``, (re)built by
-``00_Prepare_data.ipynb`` straight from the raw ``ComboScreen.h5ad`` (the same
-steps as ``Src/ComboScreen/01_Data_outlook.ipynb``). One object is used for every
-figure; analyses pull whichever representation they need:
+``00_Prepare_data.ipynb`` straight from the raw ``ComboScreen.h5ad``. One object is
+used for every figure; analyses pull whichever representation they need:
   - ``.layers['counts']``  raw UMI counts            (QC, re-normalisation)
   - ``.X`` and ``.raw``    log1p-normalised expression (gene plots, scoring;
                            ``use_raw=True`` keeps working)
