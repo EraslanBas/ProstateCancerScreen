@@ -50,7 +50,7 @@ you repeat when a figure changes.
 | # | code | reads | writes |
 | --- | --- | --- | --- |
 | 1 | `Src/ComboScreen/00_Build_ComboScreen.py` | the two external h5ads | `Data/ComboScreen.h5ad` (449,267 x 23,423) |
-| 2 | `Src/ComboScreen/ComputeDEPdex-Copy1.ipynb`, `-Copy2.ipynb` | `ComboScreen.h5ad` | `Day04DEGs.csv`, `Day10DEGs.csv` (per-perturbation DE vs NTC, via `pdex`) |
+| 2 | `Src/ComboScreen/ComputeDE_day04.ipynb`, `ComputeDE_day10.ipynb` | `ComboScreen.h5ad` | `Day04DEGs.csv`, `Day10DEGs.csv` (per-perturbation DE vs NTC, via `pdex`; the two differ only in the reference group, `NTC_day04` and `NTC_day10`) |
 | 3 | `Src/PaperFigures/_add_fdr8000.py` | those two | `Day{04,10}DEGs_fdr8000.csv` (BH recomputed over an 8,000-gene universe) |
 | 4 | `Src/PaperFigures/00_Prepare_data.ipynb` | `ComboScreen.h5ad`, the Doxo1 signature | `Data/ComboScreen_processed.h5ad` |
 | 5 | the four figure notebooks | `ComboScreen_processed.h5ad`, the fdr8000 tables | 28 PDFs in `Src/PaperFigures/figures/` |
@@ -119,14 +119,13 @@ The h5ad objects are large (`ComboScreen.h5ad` 13 GB, `ComboScreen_processed.h5a
 
 ## Other directories
 
-Not on the figure path, kept for reference:
+`Src/ComboScreen/` holds the wider ComboScreen analysis. On the figure path:
+`00_Build_ComboScreen.py` and the two `ComputeDE_day{04,10}.ipynb` notebooks.
+The rest is exploratory and kept for reference: `01_Data_outlook.ipynb` (the
+original pass, largely superseded by `Src/PaperFigures/00_Prepare_data.ipynb`),
+`02_TestDETFs.ipynb`, `03_PlotBetaMatrices.ipynb`, `InteractionModel.ipynb`,
+`InvestigateGuideAssignment.ipynb` and `TestDoxo1Signature.ipynb`.
 
-- `Src/*.ipynb`, `Src/RunCNMF.py`: earlier pilot analysis (QC, optimal-transport
-  distances between knockout and target cells, cNMF programs).
-- `Src/PilotData/`: pilot dataset notebooks.
-- `Src/ComboScreen/`: the wider ComboScreen analysis, including
-  `01_Data_outlook.ipynb` (the original exploratory pass) and several exploratory
-  notebooks. Only `00_Build_ComboScreen.py` and the two `ComputeDEPdex` notebooks
-  are on the figure path.
-- `Src/Src/`: an older duplicate of `Src/ComboScreen/` retained from before the
-  reorganisation.
+Earlier pilot and single-knockout analyses, which ran on different datasets
+(`adataALL.h5ad`, `adata_20K.h5ad`, `AbbasAnndata.h5ad`), were removed in the
+cleanup that followed the first release. They remain in the git history.
